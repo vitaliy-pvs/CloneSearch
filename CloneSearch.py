@@ -9,11 +9,11 @@ import json
 
 def search_start():
 
-    if new_files_folder_path.get() == 'Папка не выбрана':
+    if result_folder_path.get() == 'Папка не выбрана':
         lbl_button_start_text.set("Поиск не выполнен! Выберите папку с новыми файлами!")
         return
 
-    if old_files_folder_path.get() == 'Папка не выбрана':
+    if search_folder_path.get() == 'Папка не выбрана':
         lbl_button_start_text.set("Поиск не выполнен! Выберите папку со старыми файлами!")
         return
 
@@ -22,11 +22,11 @@ def search_start():
         return
 
 
-    if not (os.path.exists(new_files_folder_path.get())):
+    if not (os.path.exists(result_folder_path.get())):
         lbl_button_start_text.set("Замена не выполнена! Папка новых файлов не существует!")
         return
 
-    if not (os.path.exists(old_files_folder_path.get())):
+    if not (os.path.exists(search_folder_path.get())):
         lbl_button_start_text.set("Замена не выполнена! Папка старых файлов не существует!")
         return
 
@@ -39,11 +39,11 @@ def search_start():
         lbl_button_start_text.set("Поиск не выполнен! Нужно очистить папку для результатов поиска!")
         return
 
-    if not (os.listdir(new_files_folder_path.get())):
+    if not (os.listdir(result_folder_path.get())):
         lbl_button_start_text.set("Поиск не выполнен! Папка с новыми файлами пуста!")
         return
 
-    if not (os.listdir(old_files_folder_path.get())):
+    if not (os.listdir(search_folder_path.get())):
         lbl_button_start_text.set("Поиск не выполнен! Папка со старыми файлами пуста!")
         return
 
@@ -66,7 +66,7 @@ def search_start():
         new_file_shortname = ntpath.basename(new_file_fullname)
         new_file_text = GetBytes(new_file_fullname)
         d = {new_file_text: [0, new_file_fullname]}
-        for root, dirs, files in os.walk(old_files_folder_path.get(), topdown=False):
+        for root, dirs, files in os.walk(search_folder_path.get(), topdown=False):
             for name in files:
                 if name == new_file_shortname:
                     file_name = os.path.join(root, name)
@@ -125,7 +125,7 @@ def search_start():
         sheet.set_column('A:A', 14)
         book.close()
 
-    file_list = GetFileList(new_files_folder_path.get())
+    file_list = GetFileList(result_folder_path.get())
 
     if len(file_list) == 0:
 
@@ -159,7 +159,7 @@ def search_start():
             line = line + 1
             ToFindClonesOfTheFile(newFile)
 
-        r_sheet.write( line + 2, 0, "Поиск выполнен в папке " + old_files_folder_path.get())
+        r_sheet.write(line + 2, 0, "Поиск выполнен в папке " + search_folder_path.get())
 
         r_sheet.set_column('A:A', 40)
         r_sheet.set_column('B:B', 13)
@@ -179,8 +179,8 @@ window.title("Поиск клонов файлов")
 config = {"new_files_folder_path": 'Папка не выбрана', "old_files_folder_path": 'Папка не выбрана', "report_files_folder_path": 'Папка не выбрана'}
 
 def on_exit():
-    config["new_files_folder_path"] = new_files_folder_path.get()
-    config["old_files_folder_path"] = old_files_folder_path.get()
+    config["new_files_folder_path"] = result_folder_path.get()
+    config["old_files_folder_path"] = search_folder_path.get()
     config["report_files_folder_path"] = report_files_folder_path.get()
     with open('ConfCloneSearch.json', 'w') as f:
         json.dump(config, f)
@@ -188,10 +188,10 @@ def on_exit():
 
 window.protocol("WM_DELETE_WINDOW", on_exit)
 
-global new_files_folder_path
-new_files_folder_path = StringVar()
-global old_files_folder_path
-old_files_folder_path = StringVar()
+global result_folder_path
+result_folder_path = StringVar()
+global search_folder_path
+search_folder_path = StringVar()
 global report_files_folder_path
 report_files_folder_path = StringVar()
 global lbl_button_start_text
@@ -202,21 +202,21 @@ if os.path.exists('ConfCloneSearch.json'):
     with open('ConfCloneSearch.json', 'r') as f:
         config = json.load(f)
 
-new_files_folder_path.set(config["new_files_folder_path"])
-old_files_folder_path.set(config["old_files_folder_path"])
+result_folder_path.set(config["new_files_folder_path"])
+search_folder_path.set(config["old_files_folder_path"])
 report_files_folder_path.set(config["report_files_folder_path"])
 
 def browse_button_new():
     filename = filedialog.askdirectory()
     if filename =='':
         return
-    new_files_folder_path.set(filename)
+    result_folder_path.set(filename)
 
 def browse_button_old():
     filename = filedialog.askdirectory()
     if filename =='':
         return
-    old_files_folder_path.set(filename)
+    search_folder_path.set(filename)
 
 def browse_button_report():
     filename = filedialog.askdirectory()
@@ -226,12 +226,12 @@ def browse_button_report():
 
 button_new = Button(text="Выбрать папку с новыми файлами", command=browse_button_new, height=1, width=35)
 button_new.grid(row=0, column=0)
-lbl_new = Label(master=window, textvariable=new_files_folder_path)
+lbl_new = Label(master=window, textvariable=result_folder_path)
 lbl_new.grid(row=0, column=1, sticky=W)
 
 button_old = Button(text="Выбрать папку со старыми файлами", command=browse_button_old, height=1, width=35)
 button_old.grid(row=1, column=0)
-lbl_old = Label(master=window, textvariable=old_files_folder_path)
+lbl_old = Label(master=window, textvariable=search_folder_path)
 lbl_old.grid(row=1, column=1, sticky=W)
 
 button_report = Button(text="Выбрать папку для результатов поиска", command=browse_button_report, height=1, width=35)

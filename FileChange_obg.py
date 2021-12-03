@@ -38,15 +38,15 @@ def search_start():
 
 
 
-    if new_files_folder_path.get() == 'Папка не выбрана':
+    if result_folder_path.get() == 'Папка не выбрана':
         lbl_button_start_text.set("Замена не выполнена! Выберите папку с новыми файлами!")
         return
 
-    if not (os.path.exists(new_files_folder_path.get())):
+    if not (os.path.exists(result_folder_path.get())):
         lbl_button_start_text.set("Замена не выполнена! Папка новых файлов не существует!")
         return
 
-    if not (os.listdir(new_files_folder_path.get())):
+    if not (os.listdir(result_folder_path.get())):
         lbl_button_start_text.set("Замена не выполнена! Папка с новыми файлами пуста!")
         return
 
@@ -54,15 +54,15 @@ def search_start():
 
 
 
-    if old_files_folder_path.get() == 'Папка не выбрана':
+    if search_folder_path.get() == 'Папка не выбрана':
         lbl_button_start_text.set("Замена не выполнена! Выберите папку со старыми файлами!")
         return
 
-    if not (os.path.exists(old_files_folder_path.get())):
+    if not (os.path.exists(search_folder_path.get())):
         lbl_button_start_text.set("Замена не выполнена! Папка старых файлов не существует!")
         return
 
-    if not (os.listdir(old_files_folder_path.get())):
+    if not (os.listdir(search_folder_path.get())):
         lbl_button_start_text.set("Замена не выполнена! Папка со старыми файлами пуста!")
         return
 
@@ -77,7 +77,7 @@ def search_start():
         return FileList
 
     def ToChangeFiles(file_list):
-        for root, dirs, files in os.walk(old_files_folder_path.get(), topdown=False):
+        for root, dirs, files in os.walk(search_folder_path.get(), topdown=False):
             for name in files:
                 for new_file in file_list:
                     if name == new_file.get_short_name():
@@ -94,7 +94,7 @@ def search_start():
                                 new_file.add_replacement(file_name)
         return file_list
 
-    file_list = GetFileList(new_files_folder_path.get())
+    file_list = GetFileList(result_folder_path.get())
 
     if len(file_list) == 0:
 
@@ -132,18 +132,18 @@ window.title("Замена файлов")
 config = {"new_files_folder_path": 'Папка не выбрана', "old_files_folder_path": 'Папка не выбрана'}
 
 def on_exit():
-    config["new_files_folder_path"] = new_files_folder_path.get()
-    config["old_files_folder_path"] = old_files_folder_path.get()
+    config["new_files_folder_path"] = result_folder_path.get()
+    config["old_files_folder_path"] = search_folder_path.get()
     with open('FileChange_obg.json', 'w') as f:
         json.dump(config, f)
     window.destroy()
 
 window.protocol("WM_DELETE_WINDOW", on_exit)
 
-global new_files_folder_path
-new_files_folder_path = StringVar()
-global old_files_folder_path
-old_files_folder_path = StringVar()
+global result_folder_path
+result_folder_path = StringVar()
+global search_folder_path
+search_folder_path = StringVar()
 global lbl_button_start_text
 lbl_button_start_text = StringVar()
 lbl_button_start_text.set("1) Выберите папки с новыми и старыми файлами.\n2) Нажмите кнопку 'Начать замену файлов'.")
@@ -152,29 +152,29 @@ if os.path.exists('FileChange_obg.json'):
     with open('FileChange_obg.json', 'r') as f:
         config = json.load(f)
 
-new_files_folder_path.set(config["new_files_folder_path"])
-old_files_folder_path.set(config["old_files_folder_path"])
+result_folder_path.set(config["new_files_folder_path"])
+search_folder_path.set(config["old_files_folder_path"])
 
 def browse_button_new():
     filename = filedialog.askdirectory()
     if filename =='':
         return
-    new_files_folder_path.set(filename)
+    result_folder_path.set(filename)
 
 def browse_button_old():
     filename = filedialog.askdirectory()
     if filename =='':
         return
-    old_files_folder_path.set(filename)
+    search_folder_path.set(filename)
 
 button_new = Button(text="Выбрать папку с новыми файлами", command=browse_button_new, height=1, width=35)
 button_new.grid(row=0, column=0)
-lbl_new = Label(master=window, textvariable=new_files_folder_path)
+lbl_new = Label(master=window, textvariable=result_folder_path)
 lbl_new.grid(row=0, column=1, sticky=W)
 
 button_old = Button(text="Выбрать папку со старыми файлами", command=browse_button_old, height=1, width=35)
 button_old.grid(row=1, column=0)
-lbl_old = Label(master=window, textvariable=old_files_folder_path)
+lbl_old = Label(master=window, textvariable=search_folder_path)
 lbl_old.grid(row=1, column=1, sticky=W)
 
 button_start = Button(text="Начать замену файлов", command=search_start, height=2, width=35)
