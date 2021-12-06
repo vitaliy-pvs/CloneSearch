@@ -8,27 +8,27 @@ import json
 
 def search_start():
     if result_folder_path.get() == 'Папка не выбрана':
-        lbl_button_start_text.set("Поиск не выполнен! Выберите папку для копирования!")
+        lbl_button_start_text.set("Поиск не выполнен! Выберите папку куда копировать!")
         return
 
     if not (os.path.exists(result_folder_path.get())):
-        lbl_button_start_text.set("Поиск не выполнен! Папка для копирования не существует!")
+        lbl_button_start_text.set("Поиск не выполнен! Папка куда копировать не существует!")
         return
 
     if os.listdir(result_folder_path.get()):
-        lbl_button_start_text.set("Поиск не выполнен! Очистите папку для копирования!")
+        lbl_button_start_text.set("Поиск не выполнен! Очистите папку куда копировать!")
         return
 
     if search_folder_path.get() == 'Папка не выбрана':
-        lbl_button_start_text.set("Поиск не выполнен! Выберите папку для поиска!")
+        lbl_button_start_text.set("Поиск не выполнен! Выберите папку где искать!")
         return
 
     if not (os.path.exists(search_folder_path.get())):
-        lbl_button_start_text.set("Поиск не выполнен! Папка для поиска не существует!")
+        lbl_button_start_text.set("Поиск не выполнен! Папка где искать не существует!")
         return
 
     if not (os.listdir(search_folder_path.get())):
-        lbl_button_start_text.set("Поиск не выполнен! Папка для поиска пуста!")
+        lbl_button_start_text.set("Поиск не выполнен! Папка где искать пуста!")
         return
 
     lbl_button_start_text.set("Выполняется поиск файлов . . .")
@@ -45,7 +45,7 @@ def search_start():
     else:
         result_text.delete(1.0, END)
         window.update()
-        res = "НАЙДЕНЫ:\n"
+        res = "НАЙДЕНЫ:\n\n"
         for root, dirs, files in os.walk(search_folder_path.get(), topdown=False):
             if len(file_name_list) == 0:
                 break
@@ -61,7 +61,7 @@ def search_start():
                         new_full_file_name = os.path.join(result_folder_path.get(), name)
                         new_full_file_name = new_full_file_name.replace('\\', '/')
                         shutil.copyfile(old_full_file_name, new_full_file_name)
-                        res = res + file_name + ":  " + name + " \n"
+                        res = res + file_name + ":\n" + name + "\n\n"
                         file_name_list.remove(file_name)
                         if len(file_name_list) == 0:
                             break
@@ -78,7 +78,7 @@ def search_start():
 window = Tk()
 window.geometry('950x585')
 window.resizable(width=False, height=False)
-window.title("Копирование файлов")
+window.title("Поиск и копирование файлов формата PDF")
 
 config = {"result_folder_path": 'Папка не выбрана', "search_folder_path": 'Папка не выбрана'}
 
@@ -100,7 +100,7 @@ search_folder_path = StringVar()
 global lbl_button_start_text
 lbl_button_start_text = StringVar()
 lbl_button_start_text.set(
-    "1) Выберите папки для поиска и копирования файлов.\n2) Нажмите кнопку 'Начать копирование файлов'.")
+    "1) Выберите папки где искать и куда копировать файлы.\n2) Нажмите кнопку 'Начать поиск файлов'.")
 
 if os.path.exists('FileCopy.json'):
     with open('FileCopy.json', 'r') as f:
@@ -133,23 +133,27 @@ def paste():
         result_text.insert("insert", 'Скопируйте текст в буфер обмена и еще раз нажмите кнопку!')
 
 
-button_copy = Button(text="Выбрать папку для копирования", command=browse_button_result, height=1, width=35)
+button_copy = Button(text="Выбрать папку куда копировать", command=browse_button_result, height=1, width=35)
 button_copy.grid(row=0, column=0)
 lbl_copy = Label(master=window, textvariable=result_folder_path)
 lbl_copy.grid(row=0, column=1, sticky=W)
 
-button_search = Button(text="Выбрать папку для поиска", command=browse_button_search, height=1, width=35)
+button_search = Button(text="Выбрать папку где искать", command=browse_button_search, height=1, width=35)
 button_search.grid(row=1, column=0)
 lbl_search = Label(master=window, textvariable=search_folder_path)
 lbl_search.grid(row=1, column=1, sticky=W)
 
-button_start = Button(text="Начать копирование файлов", command=search_start, height=2, width=35)
+button_start = Button(text="Начать поиск файлов", command=search_start, height=2, width=35)
 button_start.grid(row=2, column=0)
 
 lbl_button_start = Label(master=window, textvariable=lbl_button_start_text, font='Helvetica 10 bold', justify=LEFT)
 lbl_button_start.grid(row=2, column=1, sticky=W)
 
-lbl_result_text = Label(master=window, text="Данные для поиска\n Результаты копирования")
+lbl_result_text = Label(master=window, text="Скопируйте имена файлов\nв формате PDF\nв буфер обмена и вставьте\n" +
+                                            "нажатием кнопки внизу.\nИли просто наберите имена\nфайлов с клавиатуры в\nтекстовое поле справа." +
+                                            "\n\nКаждое имя файла должно\nначинаться с новой строки\n" +
+                                            "и не иметь расширения.\n\n" +
+                                            "После выполнения поиска\nздесь появятся результаты.")
 lbl_result_text.grid(row=3, column=0, sticky=W)
 
 result_text = Text(width=65, height=20, bg="white", wrap=WORD)
