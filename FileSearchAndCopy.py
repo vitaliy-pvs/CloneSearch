@@ -3,7 +3,34 @@ import os.path
 import shutil
 from tkinter import *
 from tkinter import filedialog
+from tkinter import font as tkFont
 import json
+
+
+class RichText(Text):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        default_font = tkFont.nametofont(self.cget("font"))
+
+        em = default_font.measure("m")
+        default_size = default_font.cget("size")
+        bold_font = tkFont.Font(**default_font.configure())
+        italic_font = tkFont.Font(**default_font.configure())
+        h1_font = tkFont.Font(**default_font.configure())
+
+        bold_font.configure(weight="bold")
+        italic_font.configure(slant="italic")
+        h1_font.configure(size=int(default_size*1.2), weight="bold")
+
+        self.tag_configure("bold", font=bold_font)
+        self.tag_configure("italic", font=italic_font)
+        self.tag_configure("h1", font=h1_font, spacing3=default_size)
+
+        lmargin2 = em + default_font.measure("\u2022 ")
+        self.tag_configure("bullet", lmargin1=em, lmargin2=lmargin2)
+
+    def insert_bullet(self, index, text):
+        self.insert(index, f"\u2022 {text}", "bullet")
 
 
 def search_start():
@@ -36,42 +63,51 @@ def search_start():
 
     file_name_string = result_text.get(1.0, END)
     file_name_list = file_name_string.split("\n")
-    for name in file_name_list:
-        if name == '':
-            file_name_list.remove(name)
+    for f_name in file_name_list:
+        if f_name == '':
+            file_name_list.remove(f_name)
 
     if len(file_name_list) == 0:
         lbl_button_start_text.set("Поиск не выполнен! Список файлов для поиска пуст!")
     else:
+        not_found_file_name_list = file_name_list[:]
         result_text.delete(1.0, END)
         window.update()
-        res = "НАЙДЕНЫ:\n\n"
-        for root, dirs, files in os.walk(search_folder_path.get(), topdown=False):
-            if len(file_name_list) == 0:
-                break
-            for name in files:
-                if len(file_name_list) == 0:
-                    break
-                if name[-3:] != 'PDF' and name[-3:] != 'pdf':
-                    continue
-                for file_name in file_name_list:
-                    if name[:len(file_name)] == file_name:
-                        old_full_file_name = os.path.join(root, name)
-                        old_full_file_name = old_full_file_name.replace('\\', '/')
-                        new_full_file_name = os.path.join(result_folder_path.get(), name)
-                        new_full_file_name = new_full_file_name.replace('\\', '/')
-                        shutil.copyfile(old_full_file_name, new_full_file_name)
-                        res = res + file_name + ":\n" + name + "\n\n"
-                        file_name_list.remove(file_name)
-                        if len(file_name_list) == 0:
-                            break
-                        continue
+        list_of_similar_file_names = []
+        result_text.insert("end", "РЕЗУЛЬТАТЫ ПОИСКА\n", "h1")
 
-        if len(file_name_list) != 0:
-            res = res + "\nНЕ НАЙДЕНЫ:\n"
-            for file_name in file_name_list:
-                res = res + file_name + "\n"
-        result_text.insert(1.0, res)
+        for file_name in file_name_list:
+            for root, dirs, files in os.walk(search_folder_path.get(), topdown=False):
+                if not(file_name in not_found_file_name_list):
+                    break
+                for name in files:
+                    if name[-3:] != 'PDF' and name[-3:] != 'pdf':
+                        continue
+                    name_prefix = name[:len(file_name)]
+                    if name_prefix == file_name:
+                        if name[:-4] == file_name:
+                            old_full_file_name = os.path.join(root, name)
+                            old_full_file_name = old_full_file_name.replace('\\', '/')
+                            new_full_file_name = os.path.join(result_folder_path.get(), name)
+                            new_full_file_name = new_full_file_name.replace('\\', '/')
+                            shutil.copyfile(old_full_file_name, new_full_file_name)
+                            result_text.insert("end", "«" + file_name + "»" + " - НАЙДЕН И СКОПИРОВАН\n", "h1")
+                            not_found_file_name_list.remove(file_name)
+                            list_of_similar_file_names.clear()
+                            continue
+                        else:
+                            if not (name in list_of_similar_file_names):
+                                list_of_similar_file_names.append(name)
+
+            if file_name in not_found_file_name_list:
+                result_text.insert("end", "«" + file_name + "»" + " - НЕ НАЙДЕН\n", "italic")
+            if len(list_of_similar_file_names) > 0:
+                result_text.insert("end", " Найдены похожие файлы:\n", "italic")
+                for similar_file_name in list_of_similar_file_names:
+                    result_text.insert_bullet("end",  similar_file_name + "\n")
+                list_of_similar_file_names.clear()
+            result_text.insert("end", "\n")
+
         lbl_button_start_text.set("Поиск файлов выполнен!")
 
 
@@ -156,7 +192,7 @@ lbl_result_text = Label(master=window, text="Скопируйте имена ф�
                                             "После выполнения поиска\nздесь появятся результаты.")
 lbl_result_text.grid(row=3, column=0, sticky=W)
 
-result_text = Text(width=65, height=20, bg="white", wrap=WORD)
+result_text = RichText(width=65, height=20, bg="white", wrap=WORD)
 result_text.grid(row=3, column=1, sticky=W)
 
 button_paste = Button(text="Вставить текст из буфера", command=paste, height=2, width=35)
